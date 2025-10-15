@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path, HTTPException
 from sqlmodel import Session, select
+from typing import Annotated
 
 from backend.api.models.request_model import CommandRequest
 from backend.api.models.response_model import CommandListResponse, CommandSingleResponse
@@ -33,13 +34,13 @@ def create_command(payload: CommandRequest, db: Session = Depends(get_db)):
     # TODO:(Member) Implement this endpoint
     item = Command(command_type=payload.command_type, params=payload.params)
     db.add(item)
-    db.commit(item)
-    return {"data" : item}
-    
+    db.commit()
+    db.refresh(item)
+    return {"data": item}
 
 
 @command_router.delete("/{id}", response_model=CommandListResponse)
-def delete_command(id: int, db: Session = Depends(get_db)):
+def delete_command(id: Annotated[int, Path(title = "The ID of the item to delete")], db: Session = Depends(get_db)):
     """
     Deletes the item with the given id if it exists. Otherwise raises a 404 error.
 
@@ -48,7 +49,11 @@ def delete_command(id: int, db: Session = Depends(get_db)):
     """
     # TODO:(Member) Implement this endpoint
     query = select(Command).where(Command.id == id)
-    item = db.exec(query)
+    try:
+        item = db.exec(query).one()
+    except:
+        raise HTTPException(status_code=404, detail="Item not found")
     db.delete(item)
     db.commit()
+    db.refresh(item)
     return get_commands(db)
