@@ -55,5 +55,4 @@ def delete_command(id: Annotated[int, Path(title = "The ID of the item to delete
         raise HTTPException(status_code=404, detail="Item not found")
     db.delete(item)
     db.commit()
-    db.refresh(item)
     return get_commands(db)
