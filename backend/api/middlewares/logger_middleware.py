@@ -21,10 +21,13 @@ class LoggerMiddleware(BaseHTTPMiddleware):
         :return: Response from endpoint
         """
         # TODO:(Member) Finish implementing this method
-        param = dict(request.query_params)
+        params = dict(request.query_params)
         start_time = time.perf_counter()
         start_date = datetime.now()
-        logger.info(f"params {{ {param} }} requested at {start_date}")
+        if params:
+            logger.info(f"params {params} requested at {start_date}")
+        else:
+            logger.info(f"no query params requested at {start_date}")
 
         response = await call_next(request)
 
